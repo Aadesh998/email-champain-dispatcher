@@ -10,12 +10,14 @@ import (
 	"syscall"
 	"time"
 
+	"email.champain/db"
 	"email.champain/handlers"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	db.ConnectToDB()
 	server := createServer()
 
 	if err := runServer(context.Background(), server, 3*time.Second); err != nil {
