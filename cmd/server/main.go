@@ -12,6 +12,7 @@ import (
 
 	"email.champain/db"
 	"email.champain/handlers"
+	"email.champain/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,6 +28,13 @@ func main() {
 
 func createServer() *http.Server {
 	r := gin.Default()
+
+	r.Use(
+		middleware.IPLoggingMiddleware(),
+		middleware.ErrorHandlingMiddleware(),
+		middleware.CORSMiddleware(),
+		middleware.RateLimiterMiddleware(),
+	)
 
 	api := r.Group("/api")
 	{
