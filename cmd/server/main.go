@@ -40,6 +40,7 @@ func createServer() *http.Server {
 	{
 		api.GET("/health", handlers.HealthCheckHandler)
 		api.POST("/send-mail", handlers.SendMailHandler)
+		api.POST("/create_champain", handlers.CreateCampaign)
 	}
 
 	server := &http.Server{
