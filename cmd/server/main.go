@@ -36,11 +36,11 @@ func createServer() *http.Server {
 		middleware.RateLimiterMiddleware(),
 	)
 
-	api := r.Group("/api")
+	api := r.Group("/api/v1")
 	{
 		api.GET("/health", handlers.HealthCheckHandler)
-		api.POST("/send-mail", handlers.SendMailHandler)
 		api.POST("/create_champain", handlers.CreateCampaign)
+		api.POST("/send_email", handlers.SendMailHandler)
 	}
 
 	server := &http.Server{
