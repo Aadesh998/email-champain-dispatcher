@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
 )
 
 type HealthCheckResponse struct {
@@ -13,6 +14,12 @@ type HealthCheckResponse struct {
 }
 
 func HealthCheck(c *gin.Context) {
+
+	ctx := c.Request.Context()
+	tracer := otel.Tracer("healthcheck")
+	_, span := tracer.Start(ctx, "healthcheck")
+	defer span.End()
+
 	HealthCheckResponse := HealthCheckResponse{
 		Status:  "ok",
 		Time:    time.Now(),
