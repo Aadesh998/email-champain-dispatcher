@@ -2,9 +2,7 @@ package main
 
 import (
 	"log"
-
-	"email.champain/db"
-	"email.champain/models"
+	"mailforge/internal/db"
 )
 
 func main() {
@@ -21,10 +19,7 @@ func main() {
 
 	log.Printf("Connected to database: %v", db.DB.Dialector.Name())
 
-	err = db.DB.AutoMigrate(
-		&models.User{},
-		&models.Champain{},
-	)
+	err = db.DB.AutoMigrate()
 	if err != nil {
 		log.Fatal(err)
 	}
