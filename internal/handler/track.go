@@ -1,0 +1,46 @@
+package handler
+
+import (
+	"mailforge/internal/model"
+	"mailforge/internal/services"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+)
+
+// Tracking pixel 1x1 transparent PNG
+var pixel = []byte{
+	0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+	0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+	0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0x60, 0x00, 0x02, 0x00,
+	0x00, 0x05, 0x00, 0x01, 0x0D, 0x26, 0xE5, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44,
+	0xAE, 0x42, 0x60, 0x82,
+}
+
+func TrackOpen(c *gin.Context) {
+	campaignIDStr := c.Query("cid")
+	templateIDStr := c.Query("tid")
+	userEmail := c.Query("email")
+
+	if campaignIDStr != "" && templateIDStr != "" && userEmail != "" {
+		cid, _ := strconv.ParseUint(campaignIDStr, 10, 32)
+		tid, _ := strconv.ParseUint(templateIDStr, 10, 32)
+
+		services.TrackChan <- model.Track{
+			CampaignID: uint(cid),
+			TemplateID: uint(tid),
+			UserEmail:  userEmail,
+		}
+	}
+
+	// Return 1x1 transparent pixel
+	c.Header("Content-Type", "image/png")
+	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Data(http.StatusOK, "image/png", pixel)
+}
+
+func GetLogo(c *gin.Context) {
+	// Serving the logo from internal/assets
+	c.File("internal/assets/imagine.png")
+}

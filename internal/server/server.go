@@ -7,6 +7,7 @@ import (
 	"mailforge/config"
 	"mailforge/internal/db"
 	"mailforge/internal/middleware"
+	"mailforge/internal/services"
 	"mailforge/internal/telemetry"
 	"net/http"
 	"os"
@@ -28,6 +29,8 @@ func StartServer() {
 	shutdownTracer := telemetry.InitTracer(ctx)
 	defer shutdownTracer()
 
+	services.StartTrackWorker(ctx)
+
 	server := createServer()
 
 	if err := runServer(ctx, server, 5*time.Second); err != nil {
@@ -46,7 +49,11 @@ func createServer() *http.Server {
 		middleware.RateLimiterMiddleware(),
 	)
 
+	template := r.Group("/api/template")
+	campaign := r.Group("/api/campaign")
 	HealthCheckRoutes(r)
+	routesTemplate(template)
+	routesCampaign(campaign)
 
 	server := &http.Server{
 		Addr:    ":" + config.AppConfig.Port,

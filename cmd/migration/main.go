@@ -2,10 +2,13 @@ package main
 
 import (
 	"log"
+	"mailforge/config"
 	"mailforge/internal/db"
+	"mailforge/internal/model"
 )
 
 func main() {
+	config.LoadConfig()
 	db.ConnectToDB()
 	sqlDB, err := db.DB.DB()
 	if err != nil {
@@ -19,7 +22,11 @@ func main() {
 
 	log.Printf("Connected to database: %v", db.DB.Dialector.Name())
 
-	err = db.DB.AutoMigrate()
+	err = db.DB.AutoMigrate(
+		&model.Template{},
+		&model.Campaign{},
+		&model.Track{},
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

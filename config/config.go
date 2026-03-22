@@ -20,6 +20,7 @@ type Config struct {
 	EmailHost  string
 	EmailPort  string
 	OtelEndpoint string
+	BaseURL    string
 }
 
 var AppConfig *Config
@@ -51,6 +52,11 @@ func LoadConfig() {
 		EmailHost:  os.Getenv("EMAIL_HOST"),
 		EmailPort:  os.Getenv("EMAIL_PORT"),
 		OtelEndpoint: os.Getenv("OTEL_ENDPOINT"),
+		BaseURL:    os.Getenv("BASE_URL"),
+	}
+
+	if AppConfig.BaseURL == "" {
+		AppConfig.BaseURL = "http://localhost:8080"
 	}
 
 	if AppConfig.OtelEndpoint == "" {
