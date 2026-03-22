@@ -1,0 +1,109 @@
+:root {
+  /* Tonal Depth Colors */
+  --surface: #111319;
+  --surface-container-low: #191B22;
+  --surface-container: #1E1F26;
+  --surface-container-high: #282A30;
+  --surface-container-highest: #33343B;
+  --surface-container-lowest: #0C0E14;
+  --surface-bright: #373940;
+  
+  /* Emerald Pulse */
+  --primary: #4EDE93;
+  --primary-container: #10B981;
+  --on-primary: #ffffff;
+  
+  /* Typography */
+  --on-surface: #E2E2EB;
+  --on-surface-variant: #BBCABF;
+  --outline-variant: #3C4A42;
+  
+  --error: #FFB4AB;
+  --error-container: rgba(255, 180, 171, 0.1);
+  
+  --radius-sm: 8px;
+  --radius-default: 16px;
+  --radius-lg: 32px;
+  
+  --spacing-4: 1rem;
+  --spacing-8: 2rem;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--surface);
+  color: var(--on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--on-surface);
+  letter-spacing: -0.02em;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input, select, textarea {
+  font-family: inherit;
+  background-color: var(--surface-container-lowest);
+  border: 1px solid transparent;
+  color: var(--on-surface);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(78, 222, 147, 0.4); /* primary 40% */
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-container-high);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-bright);
+}
+
+/* Animations */
+@keyframes ripple {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  position: relative;
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  background-color: var(--primary);
+  animation: ripple 1.5s infinite;
+}
