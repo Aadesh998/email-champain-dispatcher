@@ -167,7 +167,7 @@ func processEmails(ctx context.Context, campaign model.Campaign, records [][]str
 }
 
 func generateTrackingFooter(campaignID, templateID uint, email string) string {
-	trackingURL := fmt.Sprintf("%s/track?cid=%d&tid=%d&email=%s", config.AppConfig.BaseURL, campaignID, templateID, email)
+	trackingURL := fmt.Sprintf("%s/api/track?cid=%d&tid=%d&email=%s", config.AppConfig.BaseURL, campaignID, templateID, email)
 
 	footer := fmt.Sprintf(`
 		<div style="text-align: center; margin-top: 20px;">

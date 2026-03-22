@@ -7,9 +7,8 @@ import (
 )
 
 func HealthCheckRoutes(r *gin.Engine) {
-	r.GET("/health", handler.HealthCheck)
-	r.GET("/track", handler.TrackOpen)
-	r.GET("/assets/logo", handler.GetLogo)
+	r.GET("/api/health", handler.HealthCheck)
+	r.GET("/api/track", handler.TrackOpen)
 }
 
 func routesTemplate(t *gin.RouterGroup) {

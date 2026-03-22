@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Tracking pixel 1x1 transparent PNG
 var pixel = []byte{
 	0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
 	0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
@@ -34,13 +33,7 @@ func TrackOpen(c *gin.Context) {
 		}
 	}
 
-	// Return 1x1 transparent pixel
 	c.Header("Content-Type", "image/png")
 	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.Data(http.StatusOK, "image/png", pixel)
-}
-
-func GetLogo(c *gin.Context) {
-	// Serving the logo from internal/assets
-	c.File("internal/assets/imagine.png")
 }

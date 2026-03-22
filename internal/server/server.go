@@ -3,8 +3,10 @@ package server
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"log"
 	"mailforge/config"
+	webserver "mailforge/internal"
 	"mailforge/internal/db"
 	"mailforge/internal/middleware"
 	"mailforge/internal/services"
@@ -12,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -49,8 +52,41 @@ func createServer() *http.Server {
 		middleware.RateLimiterMiddleware(),
 	)
 
+	fs := getFileSystem(false)
+	r.GET("/assets/*filepath", func(c *gin.Context) {
+		file := strings.TrimPrefix(c.Param("filepath"), "/")
+
+		f, err := fs.Open("assets/" + file)
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		defer f.Close()
+
+		stat, _ := f.Stat()
+		http.ServeContent(c.Writer, c.Request, file, stat.ModTime(), f)
+	})
+
+	r.NoRoute(func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "API not found"})
+			return
+		}
+
+		f, err := fs.Open("index.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "index.html not found")
+			return
+		}
+		defer f.Close()
+
+		stat, _ := f.Stat()
+		http.ServeContent(c.Writer, c.Request, "index.html", stat.ModTime(), f)
+	})
+
 	template := r.Group("/api/template")
 	campaign := r.Group("/api/campaign")
+
 	HealthCheckRoutes(r)
 	routesTemplate(template)
 	routesCampaign(campaign)
@@ -101,4 +137,15 @@ func runServer(
 
 	log.Println("Server stopped gracefully")
 	return nil
+}
+
+func getFileSystem(useOS bool) http.FileSystem {
+	if useOS {
+		return http.FS(os.DirFS("dist"))
+	}
+	fsys, err := fs.Sub(webserver.DistFolder, "dist")
+	if err != nil {
+		panic(err)
+	}
+	return http.FS(fsys)
 }
