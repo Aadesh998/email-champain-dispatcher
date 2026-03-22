@@ -46,27 +46,21 @@ func CreateCampaign(ctx context.Context, req dto.CampaignRequest) (dto.CampaignR
 	return mapToCampaignResponse(savedCampaign), nil
 }
 
-func SendCampaign(ctx context.Context, req dto.CampaignRequest, csvFile io.Reader) (dto.CampaignResponse, *apperror.AppError) {
+func SendCampaign(ctx context.Context, id uint, csvFile io.Reader) (dto.CampaignResponse, *apperror.AppError) {
 	ctx, span := tracer.Start(ctx, "SendCampaign")
 	defer span.End()
 
-	campaign := model.Campaign{
-		CampaignName:       req.CampaignName,
-		Description:        req.Description,
-		Status:             "in_progress",
-		TemplateID:         req.TemplateID,
-		AudienceDataSource: "csv",
-	}
-
-	savedCampaign, err := repositary.SaveCampaign(ctx, campaign)
+	// 1. Get existing campaign
+	campaign, err := repositary.GetCampaignByID(ctx, id)
 	if err != nil {
 		return dto.CampaignResponse{}, err
 	}
 
+	// 2. Parse CSV
 	reader := csv.NewReader(csvFile)
 	records, csvErr := reader.ReadAll()
 	if csvErr != nil {
-		repositary.UpdateCampaignStatus(ctx, savedCampaign.CampaignID, "failed")
+		repositary.UpdateCampaignStatus(ctx, campaign.ID, "failed")
 		return dto.CampaignResponse{}, &apperror.BadRequest
 	}
 
@@ -77,13 +71,15 @@ func SendCampaign(ctx context.Context, req dto.CampaignRequest, csvFile io.Reade
 		startIndex = 1
 	}
 
-	repositary.UpdateCampaignProgress(ctx, savedCampaign.CampaignID, 0, 0, totalEmails, "in_progress", "calculating...")
+	// 3. Update status to in_progress
+	campaign.Status = "in_progress"
+	campaign.TotalEmails = totalEmails
+	repositary.UpdateCampaignProgress(ctx, campaign.ID, 0, 0, totalEmails, "in_progress", "calculating...")
 
 	bgCtx := trace.ContextWithSpan(context.Background(), span)
-	go processEmails(bgCtx, savedCampaign, records, startIndex, totalEmails)
+	go processEmails(bgCtx, campaign, records, startIndex, totalEmails)
 
-	savedCampaign.TotalEmails = totalEmails
-	return mapToCampaignResponse(savedCampaign), nil
+	return mapToCampaignResponse(campaign), nil
 }
 
 func processEmails(ctx context.Context, campaign model.Campaign, records [][]string, startIndex int, total int) {
@@ -92,7 +88,7 @@ func processEmails(ctx context.Context, campaign model.Campaign, records [][]str
 
 	template, tErr := repositary.GetTemplateByID(ctx, campaign.TemplateID)
 	if tErr != nil {
-		repositary.UpdateCampaignStatus(ctx, campaign.CampaignID, "failed")
+		repositary.UpdateCampaignStatus(ctx, campaign.ID, "failed")
 		return
 	}
 
@@ -120,14 +116,19 @@ func processEmails(ctx context.Context, campaign model.Campaign, records [][]str
 
 			userEmail := records[j][0]
 
-			footer := generateTrackingFooter(campaign.CampaignID, campaign.TemplateID, userEmail)
+			footer := generateTrackingFooter(campaign.ID, campaign.TemplateID, userEmail)
 
 			args := make([]interface{}, 0)
 			for k := 1; k < len(records[j]); k++ {
 				args = append(args, records[j][k])
 			}
 
-			body := fmt.Sprintf(template.Body, args...)
+			body := ""
+			if len(args) > 0 {
+				body = fmt.Sprintf(template.Body, args...)
+			} else {
+				body = template.Body
+			}
 			fullBody := body + footer
 
 			err := mail.SendMailWithEmbeddedImage(userEmail, template.Subject, fullBody, logoBytes)
@@ -141,6 +142,10 @@ func processEmails(ctx context.Context, campaign model.Campaign, records [][]str
 			actualBatchSize++
 		}
 
+		if actualBatchSize == 0 {
+			continue
+		}
+
 		batchDuration := time.Since(batchStartTime)
 		avgTimePerEmail := batchDuration / time.Duration(actualBatchSize)
 		remainingEmails := total - (sent + failed)
@@ -151,14 +156,14 @@ func processEmails(ctx context.Context, campaign model.Campaign, records [][]str
 			estTimeStr = "0s"
 		}
 
-		repositary.UpdateCampaignProgress(ctx, campaign.CampaignID, sent, failed, total, "in_progress", estTimeStr)
+		repositary.UpdateCampaignProgress(ctx, campaign.ID, sent, failed, total, "in_progress", estTimeStr)
 	}
 
 	finalStatus := "completed"
 	if total > 0 && failed == total {
 		finalStatus = "failed"
 	}
-	repositary.UpdateCampaignProgress(ctx, campaign.CampaignID, sent, failed, total, finalStatus, "0s")
+	repositary.UpdateCampaignProgress(ctx, campaign.ID, sent, failed, total, finalStatus, "0s")
 }
 
 func generateTrackingFooter(campaignID, templateID uint, email string) string {
@@ -200,7 +205,7 @@ func mapToCampaignResponse(c model.Campaign) dto.CampaignResponse {
 	}
 
 	return dto.CampaignResponse{
-		ID:                 c.CampaignID,
+		ID:                 c.ID,
 		CampaignName:       c.CampaignName,
 		Description:        c.Description,
 		Status:             c.Status,
@@ -232,7 +237,7 @@ func GetCampaigns(ctx context.Context, lastID uint, limit int) (dto.CampaignPagi
 
 	var nextID uint
 	if len(campaigns) > 0 {
-		nextID = campaigns[len(campaigns)-1].CampaignID
+		nextID = campaigns[len(campaigns)-1].ID
 	}
 
 	return dto.CampaignPaginationResponse{
@@ -257,7 +262,7 @@ func GetDraftCampaigns(ctx context.Context, lastID uint, limit int) (dto.Campaig
 
 	var nextID uint
 	if len(campaigns) > 0 {
-		nextID = campaigns[len(campaigns)-1].CampaignID
+		nextID = campaigns[len(campaigns)-1].ID
 	}
 
 	return dto.CampaignPaginationResponse{

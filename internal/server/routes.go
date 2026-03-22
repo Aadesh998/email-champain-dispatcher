@@ -25,7 +25,7 @@ func routesCampaign(c *gin.RouterGroup) {
 	c.GET("/", handler.GetCampaigns)
 	c.GET("/draft", handler.GetDraftCampaigns)
 	c.POST("/", handler.CreateCampaign)
-	c.POST("/send", handler.SendCampaign)
+	c.POST("/:id/send", handler.SendCampaign)
 	c.GET("/:id", handler.GetCampaign)
 	c.PUT("/:id", handler.UpdateCampaign)
 	c.DELETE("/:id", handler.DeleteCampaign)

@@ -76,11 +76,8 @@ func SendCampaign(c *gin.Context) {
 		return
 	}
 
-	campaignName := c.PostForm("campaign_name")
-	description := c.PostForm("description")
-	templateIDStr := c.PostForm("template_id")
-
-	templateID, err := strconv.ParseUint(templateIDStr, 10, 32)
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
 		apperror.BadRequest.SendError(c)
 		return
@@ -93,20 +90,13 @@ func SendCampaign(c *gin.Context) {
 	}
 	defer file.Close()
 
-	req := dto.CampaignRequest{
-		CampaignName:       campaignName,
-		Description:        description,
-		TemplateID:         uint(templateID),
-		AudienceDataSource: "csv",
-	}
-
-	response, appErr := services.SendCampaign(c.Request.Context(), req, file)
+	response, appErr := services.SendCampaign(c.Request.Context(), uint(id), file)
 	if appErr != nil {
 		appErr.SendError(c)
 		return
 	}
 
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusOK, response)
 }
 
 func CreateCampaign(c *gin.Context) {

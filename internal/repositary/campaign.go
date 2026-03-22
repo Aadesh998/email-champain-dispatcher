@@ -28,9 +28,9 @@ func GetCampaigns(ctx context.Context, lastID uint, limit int) ([]model.Campaign
 	defer span.End()
 
 	var campaigns []model.Campaign
-	query := db.DB.WithContext(ctx).Order("campaign_id asc").Limit(limit)
+	query := db.DB.WithContext(ctx).Where("status != ?", "draft").Order("id desc").Limit(limit)
 	if lastID > 0 {
-		query = query.Where("campaign_id > ?", lastID)
+		query = query.Where("id < ?", lastID)
 	}
 	if err := query.Find(&campaigns).Error; err != nil {
 		return nil, &apperror.InternalServerError
@@ -43,9 +43,9 @@ func GetDraftCampaigns(ctx context.Context, lastID uint, limit int) ([]model.Cam
 	defer span.End()
 
 	var campaigns []model.Campaign
-	query := db.DB.WithContext(ctx).Where("status = ?", "draft").Order("campaign_id desc").Limit(limit)
+	query := db.DB.WithContext(ctx).Where("status = ?", "draft").Order("id desc").Limit(limit)
 	if lastID > 0 {
-		query = query.Where("campaign_id < ?", lastID)
+		query = query.Where("id < ?", lastID)
 	}
 	if err := query.Find(&campaigns).Error; err != nil {
 		return nil, &apperror.InternalServerError
@@ -58,7 +58,7 @@ func GetCampaignByID(ctx context.Context, id uint) (model.Campaign, *apperror.Ap
 	defer span.End()
 
 	var campaign model.Campaign
-	if err := db.DB.WithContext(ctx).First(&campaign, id).Error; err != nil {
+	if err := db.DB.WithContext(ctx).First(&campaign, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return model.Campaign{}, &apperror.NotFound
 		}
@@ -81,7 +81,7 @@ func UpdateCampaignProgress(ctx context.Context, id uint, sent, failed int, tota
 	_, span := tracer.Start(ctx, "UpdateCampaignProgress")
 	defer span.End()
 
-	if err := db.DB.WithContext(ctx).Model(&model.Campaign{}).Where("campaign_id = ?", id).Updates(map[string]interface{}{
+	if err := db.DB.WithContext(ctx).Model(&model.Campaign{}).Where("id = ?", id).Updates(map[string]interface{}{
 		"sent_emails":    sent,
 		"failed_emails":  failed,
 		"total_emails":   total,
@@ -97,7 +97,7 @@ func UpdateCampaignStatus(ctx context.Context, id uint, status string) *apperror
 	_, span := tracer.Start(ctx, "UpdateCampaignStatus")
 	defer span.End()
 
-	if err := db.DB.WithContext(ctx).Model(&model.Campaign{}).Where("campaign_id = ?", id).Update("status", status).Error; err != nil {
+	if err := db.DB.WithContext(ctx).Model(&model.Campaign{}).Where("id = ?", id).Update("status", status).Error; err != nil {
 		return &apperror.InternalServerError
 	}
 	return nil
@@ -107,7 +107,7 @@ func DeleteCampaign(ctx context.Context, id uint) *apperror.AppError {
 	_, span := tracer.Start(ctx, "DeleteCampaign")
 	defer span.End()
 
-	if err := db.DB.WithContext(ctx).Delete(&model.Campaign{}, id).Error; err != nil {
+	if err := db.DB.WithContext(ctx).Delete(&model.Campaign{}, "id = ?", id).Error; err != nil {
 		return &apperror.InternalServerError
 	}
 	return nil

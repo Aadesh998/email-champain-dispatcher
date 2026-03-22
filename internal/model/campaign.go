@@ -1,18 +1,24 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Campaign struct {
-	gorm.Model
-	CampaignID         uint      `gorm:"primaryKey;index"`
-	CampaignName       string    `gorm:"type:varchar(255);not null"`
-	Description        string    `gorm:"type:text;not null"`
-	Status             string    `gorm:"type:varchar(255);not null;default:'draft'"` // e.g., "draft", "in_progress", "completed", "failed"
-	TotalEmails        int       `gorm:"default:0"`
-	SentEmails         int       `gorm:"default:0"`
-	FailedEmails       int       `gorm:"default:0"`
-	EstimatedTime      string    `gorm:"type:varchar(255)"`
-	TemplateID         uint      `gorm:"not null"`
-	Template           *Template `gorm:"foreignKey:ID"`
-	AudienceDataSource string    `gorm:"not null"` // "csv", "contacts"
+	ID                 uint           `gorm:"primaryKey;autoIncrement" json:"id"`
+	CampaignName       string         `gorm:"type:varchar(255);not null" json:"campaign_name"`
+	Description        string         `gorm:"type:text;not null" json:"description"`
+	Status             string         `gorm:"type:varchar(255);not null;default:'draft'" json:"status"` // e.g., "draft", "in_progress", "completed", "failed", "published"
+	TotalEmails        int            `gorm:"default:0" json:"total_emails"`
+	SentEmails         int            `gorm:"default:0" json:"sent_emails"`
+	FailedEmails       int            `gorm:"default:0" json:"failed_emails"`
+	EstimatedTime      string         `gorm:"type:varchar(255)" json:"estimated_time"`
+	TemplateID         uint           `gorm:"not null" json:"template_id"`
+	Template           *Template      `gorm:"foreignKey:TemplateID" json:"template,omitempty"`
+	AudienceDataSource string         `gorm:"not null" json:"audience_data_source"` // "csv", "contacts"
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
+	DeletedAt          gorm.DeletedAt `gorm:"index" json:"-"`
 }

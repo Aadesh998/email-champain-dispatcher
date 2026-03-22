@@ -1,14 +1,20 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Template struct {
-	gorm.Model
-	ID      uint   `gorm:"primaryKey;index"`
-	Name    string `json:"name" gorm:"type:varchar(255);not null"`
-	Subject string `json:"subject" gorm:"type:varchar(255)"`
-	Status  string `json:"status" gorm:"type:varchar(255);default:'draft'"` // e.g., "draft", "published"
-	Body    string `json:"body" gorm:"type:text"`
+	ID        uint           `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name      string         `gorm:"type:varchar(255);not null" json:"name"`
+	Subject   string         `gorm:"type:varchar(255)" json:"subject"`
+	Status    string         `gorm:"type:varchar(255);default:'draft'" json:"status"` // e.g., "draft", "published"
+	Body      string         `gorm:"type:text" json:"body"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 func (Template) TableName() string {

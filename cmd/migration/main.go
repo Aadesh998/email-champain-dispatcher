@@ -23,8 +23,8 @@ func main() {
 	log.Printf("Connected to database: %v", db.DB.Dialector.Name())
 
 	err = db.DB.AutoMigrate(
-		&model.Template{},
 		&model.Campaign{},
+		&model.Template{},
 		&model.Track{},
 	)
 	if err != nil {

@@ -6,7 +6,7 @@ type TemplateRequest struct {
 	Name    string `json:"name" binding:"required"`
 	Subject string `json:"subject" binding:"required"`
 	Body    string `json:"body" binding:"required"`
-	Status  string `json:"status"`
+	Status  string `json:"status" binding:"required"`
 }
 
 type TemplateResponse struct {

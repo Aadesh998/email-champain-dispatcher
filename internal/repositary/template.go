@@ -28,9 +28,9 @@ func GetTemplates(ctx context.Context, lastID uint, limit int) ([]model.Template
 	defer span.End()
 
 	var templates []model.Template
-	query := db.DB.WithContext(ctx).Order("Id desc").Limit(limit)
+	query := db.DB.WithContext(ctx).Where("status = ?", "published").Order("id desc").Limit(limit)
 	if lastID > 0 {
-		query = query.Where("Id < ?", lastID)
+		query = query.Where("id < ?", lastID)
 	}
 	if err := query.Find(&templates).Error; err != nil {
 		return nil, &apperror.InternalServerError
@@ -43,9 +43,9 @@ func GetDraftTemplates(ctx context.Context, lastID uint, limit int) ([]model.Tem
 	defer span.End()
 
 	var templates []model.Template
-	query := db.DB.WithContext(ctx).Where("status = ?", "draft").Order("Id desc").Limit(limit)
+	query := db.DB.WithContext(ctx).Where("status = ?", "draft").Order("id desc").Limit(limit)
 	if lastID > 0 {
-		query = query.Where("Id < ?", lastID)
+		query = query.Where("id < ?", lastID)
 	}
 	if err := query.Find(&templates).Error; err != nil {
 		return nil, &apperror.InternalServerError
