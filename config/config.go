@@ -19,6 +19,7 @@ type Config struct {
 	EmailPass  string
 	EmailHost  string
 	EmailPort  string
+	OtelEndpoint string
 }
 
 var AppConfig *Config
@@ -49,5 +50,10 @@ func LoadConfig() {
 		EmailPass:  os.Getenv("EMAIL_PASSWORD"),
 		EmailHost:  os.Getenv("EMAIL_HOST"),
 		EmailPort:  os.Getenv("EMAIL_PORT"),
+		OtelEndpoint: os.Getenv("OTEL_ENDPOINT"),
+	}
+
+	if AppConfig.OtelEndpoint == "" {
+		AppConfig.OtelEndpoint = "localhost:4318"
 	}
 }

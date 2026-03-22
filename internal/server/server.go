@@ -7,6 +7,7 @@ import (
 	"mailforge/config"
 	"mailforge/internal/db"
 	"mailforge/internal/middleware"
+	"mailforge/internal/telemetry"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,15 +15,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 func StartServer() {
 	config.LoadConfig()
 	db.ConnectToDB()
-	server := createServer()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	shutdownTracer := telemetry.InitTracer(ctx)
+	defer shutdownTracer()
+
+	server := createServer()
 
 	if err := runServer(ctx, server, 5*time.Second); err != nil {
 		log.Fatal(err)
@@ -33,6 +39,7 @@ func createServer() *http.Server {
 	r := gin.Default()
 
 	r.Use(
+		otelgin.Middleware("go-backend"),
 		middleware.IPLoggingMiddleware(),
 		middleware.ErrorHandlingMiddleware(),
 		middleware.CORSMiddleware(),
@@ -56,7 +63,7 @@ func runServer(
 ) error {
 	errCh := make(chan error, 1)
 	go func() {
-		log.Println("Server running on :8000")
+		log.Println("Server running on :" + config.AppConfig.Port)
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}

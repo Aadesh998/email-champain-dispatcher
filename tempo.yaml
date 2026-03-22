@@ -1,3 +1,4 @@
+# tempo.yaml
 server:
   http_listen_port: 3200
 
@@ -8,13 +9,9 @@ distributor:
         http:
           endpoint: 0.0.0.0:4318
 
-storage:
-  trace:
-    backend: local
-    local:
-      path: /var/tempo/traces
-    wal:
-      path: /var/tempo/wal
+ingester:
+  max_block_duration: 5m
+  trace_idle_period: 10s
 
 metrics_generator:
   registry:
@@ -23,10 +20,25 @@ metrics_generator:
   storage:
     path: /var/tempo/generator/wal
     remote_write:
-      - url: http://mimir:9009/api/v1/push
+      - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
+    wal:
+      path: /var/tempo/wal
+    # Search is enabled by default in recent versions when block is present
+    # or configured via different fields depending on exact 2.x version
+    # Removing 'enabled: true' to fix unmarshal error
 
 overrides:
   defaults:
     metrics_generator:
       processors: [service-graphs, span-metrics]
+
+compactor:
+  compaction:
+    block_retention: 1h
