@@ -17,6 +17,8 @@ type Campaign struct {
 	EstimatedTime      string         `gorm:"type:varchar(255)" json:"estimated_time"`
 	TemplateID         uint           `gorm:"not null" json:"template_id"`
 	Template           *Template      `gorm:"foreignKey:TemplateID" json:"template,omitempty"`
+	UserID             uint           `gorm:"not null" json:"user_id"`
+	User               *User          `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	AudienceDataSource string         `gorm:"not null" json:"audience_data_source"` // "csv", "contacts"
 	CreatedAt          time.Time      `json:"created_at"`
 	UpdatedAt          time.Time      `json:"updated_at"`
