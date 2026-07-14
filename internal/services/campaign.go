@@ -14,6 +14,7 @@ import (
 	mail "mailforge/internal/utils"
 	"math"
 	"os"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -56,7 +57,13 @@ func SendCampaign(ctx context.Context, id uint, csvFile io.Reader) (dto.Campaign
 		return dto.CampaignResponse{}, err
 	}
 
-	// 2. Parse CSV
+	// 2. Resolve sender credentials before accepting the send
+	smtpConfig, err := ResolveSmtpConfig(ctx)
+	if err != nil {
+		return dto.CampaignResponse{}, err
+	}
+
+	// 3. Parse CSV
 	reader := csv.NewReader(csvFile)
 	records, csvErr := reader.ReadAll()
 	if csvErr != nil {
@@ -71,18 +78,18 @@ func SendCampaign(ctx context.Context, id uint, csvFile io.Reader) (dto.Campaign
 		startIndex = 1
 	}
 
-	// 3. Update status to in_progress
+	// 4. Update status to in_progress
 	campaign.Status = "in_progress"
 	campaign.TotalEmails = totalEmails
 	repositary.UpdateCampaignProgress(ctx, campaign.ID, 0, 0, totalEmails, "in_progress", "calculating...")
 
 	bgCtx := trace.ContextWithSpan(context.Background(), span)
-	go processEmails(bgCtx, campaign, records, startIndex, totalEmails)
+	go processEmails(bgCtx, campaign, smtpConfig, records, startIndex, totalEmails)
 
 	return mapToCampaignResponse(campaign), nil
 }
 
-func processEmails(ctx context.Context, campaign model.Campaign, records [][]string, startIndex int, total int) {
+func processEmails(ctx context.Context, campaign model.Campaign, smtpConfig mail.SMTPConfig, records [][]string, startIndex int, total int) {
 	ctx, span := tracer.Start(ctx, "processEmails")
 	defer span.End()
 
@@ -114,24 +121,16 @@ func processEmails(ctx context.Context, campaign model.Campaign, records [][]str
 				continue
 			}
 
-			userEmail := records[j][0]
+			userEmail := strings.TrimSpace(records[j][0])
+			if userEmail == "" || !strings.Contains(userEmail, "@") {
+				failed++
+				continue
+			}
 
 			footer := generateTrackingFooter(campaign.ID, campaign.TemplateID, userEmail)
+			fullBody := template.Body + footer
 
-			args := make([]interface{}, 0)
-			for k := 1; k < len(records[j]); k++ {
-				args = append(args, records[j][k])
-			}
-
-			body := ""
-			if len(args) > 0 {
-				body = fmt.Sprintf(template.Body, args...)
-			} else {
-				body = template.Body
-			}
-			fullBody := body + footer
-
-			err := mail.SendMailWithEmbeddedImage(userEmail, template.Subject, fullBody, logoBytes)
+			err := mail.SendMailWithEmbeddedImage(smtpConfig, userEmail, template.Subject, fullBody, logoBytes)
 			if err != nil {
 				log.Printf("Failed to send email to %s: %v", userEmail, err)
 				failed++

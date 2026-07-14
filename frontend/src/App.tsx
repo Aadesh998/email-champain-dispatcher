@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout';
 import { TemplatesPage, CampaignsPage } from './pages';
 import { NewCampaignPage } from './pages/NewCampaignPage';
 import { HelpPage } from './pages/HelpPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
   const [activeView, setActiveView] = useState<View>('campaigns');
@@ -25,6 +26,8 @@ export default function App() {
         return <CampaignsPage isDraft />;
       case 'help':
         return <HelpPage />;
+      case 'settings':
+        return <SettingsPage />;
       default:
         return null;
     }

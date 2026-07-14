@@ -3,25 +3,21 @@ package utils
 import (
 	"fmt"
 	"io"
-	"mailforge/config"
-	"strconv"
 
 	"gopkg.in/gomail.v2"
 )
 
-func SendMailWithEmbeddedImage(to, subject, body string, imageBytes []byte) error {
+type SMTPConfig struct {
+	From     string
+	Password string
+	Host     string
+	Port     int
+}
+
+func SendMailWithEmbeddedImage(smtp SMTPConfig, to, subject, body string, imageBytes []byte) error {
 	message := gomail.NewMessage()
-	from := config.AppConfig.EmailFrom
-	password := config.AppConfig.EmailPass
-	host := config.AppConfig.EmailHost
-	portStr := config.AppConfig.EmailPort
 
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		port = 587
-	}
-
-	message.SetHeader("From", from)
+	message.SetHeader("From", smtp.From)
 	message.SetHeader("To", to)
 	message.SetHeader("Subject", subject)
 
@@ -34,10 +30,10 @@ func SendMailWithEmbeddedImage(to, subject, body string, imageBytes []byte) erro
 
 	message.SetBody("text/html", body)
 
-	d := gomail.NewDialer(host, port, from, password)
+	d := gomail.NewDialer(smtp.Host, smtp.Port, smtp.From, smtp.Password)
 
 	if err := d.DialAndSend(message); err != nil {
-		return fmt.Errorf("Failed to send email to %s: %v", to, err)
+		return fmt.Errorf("failed to send email to %s: %v", to, err)
 	}
 	return nil
 }

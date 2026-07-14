@@ -1,6 +1,12 @@
-import { TemplatePaginationResponse, CampaignPaginationResponse, Template, Campaign } from './types';
+import { TemplatePaginationResponse, CampaignPaginationResponse, Template, Campaign, SmtpSettings } from './types';
 
 const API_BASE = '/api';
+
+// Surfaces the backend's error message (its JSON "error" field) instead of a generic one.
+const fail = async (res: Response, fallback: string): Promise<never> => {
+  const body = await res.json().catch(() => null);
+  throw new Error(body?.error || fallback);
+};
 
 export const api = {
   // Templates
@@ -73,7 +79,7 @@ export const api = {
       method: 'POST',
       body: formData, // FormData automatically sets multipart/form-data boundary
     });
-    if (!res.ok) throw new Error('Failed to send campaign');
+    if (!res.ok) await fail(res, 'Failed to send campaign');
     return res.json();
   },
   updateCampaign: async (id: number, data: any) => {
@@ -88,6 +94,22 @@ export const api = {
   deleteCampaign: async (id: number) => {
     const res = await fetch(`${API_BASE}/campaign/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete campaign');
+    return res.json();
+  },
+
+  // Settings
+  getSmtpSettings: async (): Promise<SmtpSettings> => {
+    const res = await fetch(`${API_BASE}/settings/smtp`);
+    if (!res.ok) throw new Error('Failed to fetch SMTP settings');
+    return res.json();
+  },
+  updateSmtpSettings: async (data: { from_email: string; password: string; host: string; port: number }): Promise<SmtpSettings> => {
+    const res = await fetch(`${API_BASE}/settings/smtp`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) await fail(res, 'Failed to save SMTP settings');
     return res.json();
   },
 };

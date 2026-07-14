@@ -20,6 +20,11 @@ func routesTemplate(t *gin.RouterGroup) {
 	t.DELETE("/:id", handler.DeleteTemplate)
 }
 
+func routesSettings(s *gin.RouterGroup) {
+	s.GET("/smtp", handler.GetSmtpSettings)
+	s.PUT("/smtp", handler.UpdateSmtpSettings)
+}
+
 func routesCampaign(c *gin.RouterGroup) {
 	c.GET("/", handler.GetCampaigns)
 	c.GET("/draft", handler.GetDraftCampaigns)

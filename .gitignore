@@ -4,3 +4,5 @@ bin
 node_modules
 package-lock.json
 stitch_new_campaign_flow
+templates/*.html
+!templates/.gitkeep

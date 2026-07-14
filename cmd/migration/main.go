@@ -5,6 +5,7 @@ import (
 	"mailforge/config"
 	"mailforge/internal/db"
 	"mailforge/internal/model"
+	"mailforge/internal/seed"
 )
 
 func main() {
@@ -26,9 +27,12 @@ func main() {
 		&model.Campaign{},
 		&model.Template{},
 		&model.Track{},
+		&model.SmtpSetting{},
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("All models migrated successfully")
+
+	seed.Templates("templates")
 }

@@ -1,4 +1,4 @@
-export type View = 'templates' | 'campaigns' | 'draft-templates' | 'draft-campaigns' | 'help';
+export type View = 'templates' | 'campaigns' | 'draft-templates' | 'draft-campaigns' | 'help' | 'settings';
 export type CampaignStep = 1 | 2;
 
 export interface Template {
@@ -37,6 +37,13 @@ export interface CampaignFormData {
 export interface PaginatedResponse<T> {
   data: T[]; // Assuming standard wrapper or we use the specific properties
   // The actual structure from DTO is `campaigns: []` and `templates: []`, let's define specific ones.
+}
+
+export interface SmtpSettings {
+  configured: boolean;
+  from_email: string;
+  host: string;
+  port: number;
 }
 
 export interface TemplatePaginationResponse {

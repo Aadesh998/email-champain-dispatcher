@@ -86,10 +86,12 @@ func createServer() *http.Server {
 
 	template := r.Group("/api/template")
 	campaign := r.Group("/api/campaign")
+	settings := r.Group("/api/settings")
 
 	HealthCheckRoutes(r)
 	routesTemplate(template)
 	routesCampaign(campaign)
+	routesSettings(settings)
 
 	server := &http.Server{
 		Addr:    ":" + config.AppConfig.Port,

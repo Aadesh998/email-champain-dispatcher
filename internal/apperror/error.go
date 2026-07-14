@@ -24,6 +24,12 @@ var NotFound = AppError{
 	HTTPStatus: 404,
 }
 
+var SmtpNotConfigured = AppError{
+	Code:       "SMTP_NOT_CONFIGURED",
+	Message:    "Email credentials are not configured. Set them up in Settings before sending.",
+	HTTPStatus: 400,
+}
+
 var InternalServerError = AppError{
 	Code:       "INTERNAL_SERVER_ERROR",
 	Message:    "Internal server error",

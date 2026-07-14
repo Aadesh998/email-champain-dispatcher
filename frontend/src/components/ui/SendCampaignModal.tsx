@@ -38,7 +38,7 @@ export const SendCampaignModal: React.FC<SendCampaignModalProps> = ({ campaign, 
       onClose();
     } catch (err) {
       console.error(err);
-      showToast("Failed to initiate delivery.", "error");
+      showToast(err instanceof Error ? err.message : "Failed to initiate delivery.", "error");
     } finally {
       setIsSubmitting(false);
     }

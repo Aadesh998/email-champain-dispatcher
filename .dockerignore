@@ -1,0 +1,13 @@
+.git
+bin
+node_modules
+frontend/node_modules
+internal/dist
+stitch_new_campaign_flow
+.env.*
+*.md
+grafana
+otel-collector.yaml
+prometheus.yaml
+tempo.yaml
+docker-compose.yml

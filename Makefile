@@ -3,11 +3,14 @@ BUILD_DIR=bin
 ENTRY_FILE=cmd/server/main.go
 MIGRATION_FILE=cmd/migration/main.go
 
-.PHONY: dev build run migrate clean
+.PHONY: dev build run migrate seed clean frontend
 
 all: dev
 
 dev: build run
+
+frontend:
+	cd frontend && npm install && npm run build
 
 build:
 	mkdir -p $(BUILD_DIR)
@@ -18,6 +21,9 @@ run:
 
 migrate:
 	go run $(MIGRATION_FILE)
+
+seed:
+	go run cmd/seed/main.go
 
 clean:
 	rm -rf $(BUILD_DIR)

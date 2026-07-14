@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   HelpCircle,
+  Settings,
 } from "lucide-react";
 import { View } from "../../types";
 
@@ -81,6 +82,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           active={activeView === "campaigns"}
           onClick={() => {
             setActiveView("campaigns");
+            onNavigate?.();
+          }}
+        />
+        <SidebarItem
+          icon={<Settings size={20} />}
+          label="Settings"
+          active={activeView === "settings"}
+          onClick={() => {
+            setActiveView("settings");
             onNavigate?.();
           }}
         />
