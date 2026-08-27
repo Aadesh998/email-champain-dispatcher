@@ -6,3 +6,9 @@ package-lock.json
 stitch_new_campaign_flow
 templates/*.html
 !templates/.gitkeep
+
+# observability stack config (local only)
+grafana/
+prometheus.yaml
+tempo.yaml
+otel-collector.yaml
